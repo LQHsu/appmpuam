@@ -1,0 +1,41 @@
+<div class="notebook-bg" [class.oculto]="agua()" aria-hidden="true"></div>
+
+<div class="agua-bg" [class.visible]="agua()" aria-hidden="true">
+  <div class="bg-circle bg-circle--1"></div>
+  <div class="bg-circle bg-circle--2"></div>
+  <div class="bg-circle bg-circle--3"></div>
+  <div class="bg-ring bg-ring--1"></div>
+  <div class="bg-ring bg-ring--2"></div>
+  <div class="bg-ring bg-ring--3"></div>
+  @for (i of iconos; track $index) {
+    <i
+      class="bg-food-icon bi"
+      [class]="'bi-' + i.icono"
+      [style.left.%]="i.left"
+      [style.animation-duration.s]="i.duracion"
+      [style.animation-delay.s]="i.retraso"
+      [style.font-size.rem]="i.tamano"
+    ></i>
+  }
+  @for (b of burbujas; track $index) {
+    <div
+      class="bg-bubble"
+      [style.width.px]="b.tamano"
+      [style.height.px]="b.tamano"
+      [style.left.%]="b.left"
+      [style.animation-duration.s]="b.duracion"
+      [style.animation-delay.s]="b.retraso"
+    ></div>
+  }
+</div>
+
+<button
+  type="button"
+  class="btn-toggle-bg"
+  [class.sobre-agua]="agua()"
+  (click)="alternar()"
+  aria-label="Alternar animación de fondo"
+  title="Alternar fondo"
+>
+  <i class="bi bi-droplet-half"></i>
+</button>

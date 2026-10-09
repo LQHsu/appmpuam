@@ -1,0 +1,98 @@
+<div class="pagina">
+  <div class="tarjeta">
+    <div class="tarjeta-header">
+      <img class="logo-uam" src="images/uam-logo-blanco.png" alt="Universidad Autónoma Metropolitana, Unidad Xochimilco" />
+      <div class="marca">
+        <h1 class="marca-titulo">Monedero electrónico</h1>
+      </div>
+    </div>
+
+    <div class="tarjeta-cuerpo">
+      <p class="hint">Ingresa tus credenciales CUS para continuar</p>
+
+      @if (alerta(); as a) {
+        <div class="alerta" [class.alerta--error]="a.tipo === 'error'" [class.alerta--success]="a.tipo === 'success'" role="alert" aria-live="polite">
+          <i class="bi" [class.bi-exclamation-circle-fill]="a.tipo === 'error'" [class.bi-check-circle-fill]="a.tipo === 'success'"></i>
+          <span>{{ a.mensaje }}</span>
+        </div>
+      }
+
+      <form class="formulario" [formGroup]="form" (ngSubmit)="acceder()" novalidate autocomplete="off">
+        <div class="campo">
+          <label class="etiqueta" for="numeroEconomico">
+            <i class="bi bi-person-badge"></i>
+            Número económico
+          </label>
+          <input
+            id="numeroEconomico"
+            type="text"
+            class="entrada"
+            formControlName="numeroEconomico"
+            placeholder="Ej. 12345"
+            maxlength="20"
+            autocomplete="username"
+            [class.invalido]="numeroEconomico.invalid && numeroEconomico.touched"
+          />
+          <span class="error-campo">
+            @if (numeroEconomico.touched && numeroEconomico.hasError('required')) {
+              Este campo es obligatorio.
+            }
+          </span>
+        </div>
+
+        <div class="campo">
+          <label class="etiqueta" for="nip">
+            <i class="bi bi-key"></i>
+            NIP
+          </label>
+          <div class="entrada-nip">
+            <input
+              id="nip"
+              class="entrada"
+              formControlName="nip"
+              [type]="mostrarNip() ? 'text' : 'password'"
+              placeholder="•••••"
+              maxlength="5"
+              inputmode="numeric"
+              autocomplete="current-password"
+              [class.invalido]="nip.invalid && nip.touched"
+              (input)="limpiarNip($event)"
+            />
+            <button
+              type="button"
+              class="toggle-nip"
+              (click)="alternarNip()"
+              [attr.aria-label]="mostrarNip() ? 'Ocultar NIP' : 'Mostrar NIP'"
+            >
+              <i class="bi" [class.bi-eye]="!mostrarNip()" [class.bi-eye-slash]="mostrarNip()"></i>
+            </button>
+          </div>
+          <span class="error-campo">
+            @if (nip.touched && nip.hasError('required')) {
+              Este campo es obligatorio.
+            } @else if (nip.touched && nip.hasError('pattern')) {
+              El NIP debe tener exactamente 5 dígitos.
+            }
+          </span>
+        </div>
+
+        <button type="submit" class="btn-primario" [disabled]="cargando()">
+          @if (cargando()) {
+            <span class="spinner" aria-hidden="true"></span>
+            Verificando...
+          } @else {
+            <i class="bi bi-box-arrow-in-right"></i>
+            Acceder
+          }
+        </button>
+
+        <div class="recuperar">
+          <a href="https://cus.xoc.uam.mx/" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-shield-lock"></i>
+            Recupera tu NIP en CUS
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

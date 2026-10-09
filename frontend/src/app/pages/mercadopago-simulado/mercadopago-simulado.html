@@ -1,0 +1,58 @@
+<div class="pagina-mp">
+  <div class="modo-dev" role="note">
+    <i class="bi bi-tools"></i> Simulación de Mercado Pago — solo desarrollo, no se realiza ningún cargo real
+  </div>
+
+  <div class="caja">
+    @if (!valido) {
+      <div class="estado">
+        <i class="bi bi-exclamation-triangle icono-aviso"></i>
+        <h1>Enlace de pago no válido</h1>
+        <p>Cierra esta pestaña y vuelve a iniciar el pago desde tu monedero.</p>
+      </div>
+    } @else if (enviado(); as resultado) {
+      <div class="estado" role="status" aria-live="polite">
+        @switch (resultado) {
+          @case ('aprobado') {
+            <i class="bi bi-check-circle-fill icono-ok"></i>
+            <h1>Pago aprobado</h1>
+          }
+          @case ('rechazado') {
+            <i class="bi bi-x-circle-fill icono-error"></i>
+            <h1>Pago rechazado</h1>
+          }
+          @default {
+            <i class="bi bi-slash-circle-fill icono-aviso"></i>
+            <h1>Pago cancelado</h1>
+          }
+        }
+        <p>Puedes volver a la pestaña de tu monedero. Esta pestaña se cerrará sola.</p>
+      </div>
+    } @else if (procesando()) {
+      <div class="estado" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1>Procesando tu pago…</h1>
+        <p>No cierres esta pestaña.</p>
+      </div>
+    } @else {
+      <header class="caja-header">
+        <span class="comercio"><i class="bi bi-wallet2"></i> Monedero electrónico UAM</span>
+        <span class="monto">{{ monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+      </header>
+
+      <div class="caja-cuerpo">
+        <p class="pregunta">Elige cómo quieres terminar esta prueba:</p>
+
+        <button type="button" class="btn btn--ok" (click)="pagar()">
+          <i class="bi bi-check-circle"></i> Pagar (resultado aprobado)
+        </button>
+        <button type="button" class="btn btn--error" (click)="rechazar()">
+          <i class="bi bi-x-circle"></i> Simular pago rechazado
+        </button>
+        <button type="button" class="btn btn--neutro" (click)="cancelar()">
+          <i class="bi bi-arrow-left"></i> Cancelar y volver al comercio
+        </button>
+      </div>
+    }
+  </div>
+</div>

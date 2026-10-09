@@ -1,0 +1,42 @@
+<nav class="navbar">
+  <a routerLink="/inicio" class="navbar-marca">
+    <img class="navbar-logo" src="images/uam-logo.png" alt="Universidad Autónoma Metropolitana, Unidad Xochimilco" />
+    <span class="navbar-divisor" aria-hidden="true"></span>
+    <span class="navbar-titulo">Monedero electrónico</span>
+  </a>
+
+  @if (usuario(); as u) {
+    <div class="usuario-menu">
+      <button
+        type="button"
+        class="usuario-btn"
+        (click)="alternarMenu()"
+        [attr.aria-expanded]="menuAbierto()"
+        aria-haspopup="menu"
+        aria-label="Menú de usuario"
+      >
+        <i class="bi bi-person-circle"></i>
+        <span class="usuario-nombre">{{ u.nombre }}</span>
+        <i class="bi bi-chevron-down chevron"></i>
+      </button>
+
+      @if (menuAbierto()) {
+        <ul class="menu" role="menu">
+          <li class="menu-encabezado">
+            <i class="bi bi-person-circle"></i> {{ u.nombre }}
+          </li>
+          <li role="none">
+            <button type="button" class="menu-item" role="menuitem" (click)="cerrarSesion()">
+              <span class="menu-icono"><i class="bi bi-box-arrow-left"></i></span>
+              Cerrar sesión
+            </button>
+          </li>
+        </ul>
+      }
+    </div>
+  }
+</nav>
+
+<main class="contenido">
+  <router-outlet />
+</main>

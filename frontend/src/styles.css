@@ -1,0 +1,200 @@
+/* Variables y base global · Tema Monedero electrónico UAM Xochimilco */
+:root {
+  /* Azul de acento: #1617A8 y sus variantes */
+  --accent-100: #e8e8fa;
+  --accent-200: #babaf0;
+  --accent-400: #5758d4;
+  --accent-600: #1617a8;
+  --accent-700: #0f1078;
+  --accent-bg: #f9f9fe;
+  --accent-tint: #eff0fc;
+  --accent-border: #dddef5;
+  --bg-main: #f6f6fd;
+  --border: #e2e8f0;
+
+  /* Estados (el -dark es para texto pequeño sobre fondo claro) */
+  --success: #16a84c;
+  --success-dark: #0f7a35;
+  --success-bg: #e8f8ee;
+  --success-border: #bfe8cf;
+  --warning: #a88200;
+  --warning-dark: #7a5d00;
+  --warning-bg: #fdf6df;
+  --warning-border: #efdc9c;
+  --danger: #a82116;
+  --danger-bg: #fdf0ee;
+  --danger-border: #efb9b3;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+/* ── Tarjeta con cabecera de marca (compartida por login e inicio) ── */
+.pagina {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.tarjeta {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  animation: tarjetaEntra 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes tarjetaEntra {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.tarjeta-header {
+  background: linear-gradient(135deg, var(--accent-600) 0%, var(--accent-700) 100%);
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tarjeta-header::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tarjeta-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 40%;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.logo-uam {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.marca-titulo {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+
+.tarjeta-cuerpo {
+  padding: 28px 32px 32px;
+}
+
+/* Botón primario (estilo "Acceder") */
+.btn-primario {
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--accent-600);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
+  box-shadow: 0 4px 16px rgba(22, 23, 168, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primario:hover:not(:disabled) {
+  background: var(--accent-700);
+  box-shadow: 0 6px 22px rgba(22, 23, 168, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-primario:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primario:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.btn-primario:focus-visible {
+  outline: 3px solid rgba(22, 23, 168, 0.35);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .tarjeta-header {
+    padding: 22px 20px 18px;
+    gap: 14px;
+  }
+
+  .tarjeta-cuerpo {
+    padding: 22px 20px 24px;
+  }
+
+  .marca-titulo {
+    font-size: 16px;
+  }
+}

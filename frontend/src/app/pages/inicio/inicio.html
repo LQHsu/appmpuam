@@ -1,0 +1,88 @@
+@if (usuario(); as u) {
+  <div class="dashboard">
+    <section class="bienvenida">
+      <div class="home-logo">
+        <img src="images/uam-emblema.jpg" alt="Emblema de la UAM" />
+      </div>
+
+      <h1 class="bienvenida-titulo">Bienvenido a tu monedero</h1>
+      <p class="bienvenida-texto">
+        Hola, <span class="nombre">{{ u.nombre }}</span>. Es un gusto saludarte.
+      </p>
+
+      <div class="tag">
+        <i class="bi bi-shield-check"></i>
+        Monedero activo
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <i class="bi bi-card-text"></i>
+          <div class="info-label">Número económico / Matrícula</div>
+          <div class="info-value">{{ u.numeroEconomico }}</div>
+        </div>
+        <div class="info-item">
+          <i class="bi bi-calendar-check"></i>
+          <div class="info-label">Fecha</div>
+          <div class="info-value">{{ fecha() }}</div>
+        </div>
+        <div class="info-item">
+          <i class="bi bi-clock"></i>
+          <div class="info-label">Hora actual</div>
+          <div class="info-value">{{ hora() }}</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="columnas">
+      <section class="saldo" aria-label="Monedero electrónico">
+        <span class="saldo-etiqueta"><i class="bi bi-wallet2"></i> Tu saldo</span>
+        <span class="saldo-monto">{{ wallet.saldo() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+        <span class="saldo-moneda">MXN</span>
+
+        <div class="saldo-totales">
+          <div>
+            <span class="total-etiqueta"><i class="bi bi-arrow-down-circle"></i> Abonado</span>
+            <span class="total-valor">{{ wallet.totalAbonado() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+          </div>
+          <div>
+            <span class="total-etiqueta"><i class="bi bi-arrow-up-circle"></i> Consumido</span>
+            <span class="total-valor">{{ wallet.totalConsumido() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-abono" (click)="abrirAbono()">
+          <i class="bi bi-plus-circle"></i>
+          Realizar abono a monedero
+        </button>
+      </section>
+
+      <section class="movimientos" aria-label="Últimos movimientos">
+        <h2 class="movimientos-titulo"><i class="bi bi-receipt"></i> Últimos movimientos</h2>
+        <ul class="lista">
+          @for (m of movimientos(); track m.id) {
+            <li class="movimiento">
+              <span class="mov-icono" [class.abono]="m.tipo === 'abono'">
+                <i class="bi" [class.bi-arrow-down-left]="m.tipo === 'abono'" [class.bi-arrow-up-right]="m.tipo === 'consumo'"></i>
+              </span>
+              <span class="mov-datos">
+                <span class="mov-concepto">{{ m.concepto }}</span>
+                <span class="mov-fecha">{{ m.fechaTexto }}</span>
+              </span>
+              <span class="mov-monto" [class.abono]="m.tipo === 'abono'">
+                {{ m.tipo === 'abono' ? '+' : '−' }}{{ m.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  @if (dialogoAbierto()) {
+    <app-abono-dialog
+      [saldoActual]="wallet.saldo()"
+      (cerrar)="cerrarAbono()"
+    />
+  }
+}
