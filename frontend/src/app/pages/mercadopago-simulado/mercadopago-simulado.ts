@@ -21,6 +21,9 @@ export class MercadoPagoSimulado {
 
   protected readonly preferenceId = this.params.get('pref') ?? '';
   protected readonly monto = Number(this.params.get('monto') ?? 0);
+  protected readonly titulo = this.params.get('titulo') ?? 'Pago';
+  protected readonly area = this.params.get('area') ?? '';
+  protected readonly referencia = this.params.get('referencia') ?? '';
   protected readonly valido = this.preferenceId !== '' && this.monto > 0;
 
   protected readonly procesando = signal(false);

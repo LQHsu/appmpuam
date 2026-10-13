@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
+import { PagosService } from '../core/pagos.service';
 import { WalletService } from '../core/wallet.service';
 
 /** Estructura de las páginas con sesión: navbar + contenido. */
@@ -14,6 +15,7 @@ import { WalletService } from '../core/wallet.service';
 export class Layout {
   private readonly auth = inject(AuthService);
   private readonly wallet = inject(WalletService);
+  private readonly pagos = inject(PagosService);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -28,6 +30,7 @@ export class Layout {
     this.menuAbierto.set(false);
     this.auth.logout();
     this.wallet.reiniciar();
+    this.pagos.reiniciar();
     this.router.navigateByUrl('/login');
   }
 

@@ -9,7 +9,10 @@ import {
 } from '@angular/core';
 import { AuthService } from '../../core/auth.service';
 import { WalletService } from '../../core/wallet.service';
-import { AbonoDialog } from './abono-dialog/abono-dialog';
+import { CatalogoPagosService } from '../../core/catalogo-pagos.service';
+import { TipoPago } from '../../core/pagos.model';
+import { PagosService } from '../../core/pagos.service';
+import { PagoDialog } from './pago-dialog/pago-dialog';
 
 const formatoFecha = new Intl.DateTimeFormat('es-MX', {
   weekday: 'long',
@@ -33,7 +36,7 @@ const formatoMovimiento = new Intl.DateTimeFormat('es-MX', {
 
 @Component({
   selector: 'app-inicio',
-  imports: [CurrencyPipe, AbonoDialog],
+  imports: [CurrencyPipe, PagoDialog],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +44,8 @@ const formatoMovimiento = new Intl.DateTimeFormat('es-MX', {
 export class Inicio {
   private readonly auth = inject(AuthService);
   protected readonly wallet = inject(WalletService);
+  protected readonly pagos = inject(PagosService);
+  protected readonly catalogo = inject(CatalogoPagosService);
 
   protected readonly usuario = this.auth.usuario;
 
@@ -55,18 +60,28 @@ export class Inicio {
     this.wallet.movimientos().map((m) => ({ ...m, fechaTexto: formatoMovimiento.format(m.fecha) })),
   );
 
-  protected readonly dialogoAbierto = signal(false);
+  protected readonly pagosVista = computed(() =>
+    this.pagos.pagos().map((p) => ({
+      ...p,
+      fechaTexto: formatoMovimiento.format(p.fecha),
+      icono: this.catalogo.info(p.tipo).icono,
+    })),
+  );
+
+  protected readonly pestana = signal<'movimientos' | 'pagos'>('movimientos');
+  /** Tipo de pago cuyo diálogo está abierto (null = cerrado). */
+  protected readonly tipoAbierto = signal<TipoPago | null>(null);
 
   constructor() {
     const reloj = setInterval(() => this.ahora.set(new Date()), 1000);
     inject(DestroyRef).onDestroy(() => clearInterval(reloj));
   }
 
-  protected abrirAbono(): void {
-    this.dialogoAbierto.set(true);
+  protected abrir(tipo: TipoPago): void {
+    this.tipoAbierto.set(tipo);
   }
 
-  protected cerrarAbono(): void {
-    this.dialogoAbierto.set(false);
+  protected cerrarPago(): void {
+    this.tipoAbierto.set(null);
   }
 }

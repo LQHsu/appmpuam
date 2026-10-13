@@ -40,6 +40,12 @@
         <span class="monto">{{ monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
       </header>
 
+      <dl class="detalle">
+        <div><dt>Concepto</dt><dd>{{ titulo }}</dd></div>
+        @if (area) { <div><dt>Área</dt><dd>{{ area }}</dd></div> }
+        @if (referencia) { <div><dt>Referencia</dt><dd>{{ referencia }}</dd></div> }
+      </dl>
+
       <div class="caja-cuerpo">
         <p class="pregunta">Elige cómo quieres terminar esta prueba:</p>
 

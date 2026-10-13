@@ -6,6 +6,16 @@ export interface PreferenciaPago {
   initPoint: string;
 }
 
+/** Lo que se le informa a Mercado Pago para identificar el pago. */
+export interface DatosPreferencia {
+  monto: number;
+  /** Concepto que verá el usuario en Mercado Pago (title del ítem). */
+  titulo: string;
+  /** Coordinación o área que recibe el pago, con su clave presupuestal. */
+  area: string;
+  referencia: string;
+}
+
 export interface ResultadoPago {
   estado: 'aprobado' | 'rechazado' | 'cancelado' | 'expirado';
   /** Id del pago en Mercado Pago (solo si fue aprobado). */
@@ -21,7 +31,8 @@ const TIEMPO_MAXIMO_ESPERA = 10 * 60 * 1000;
  *
  * Flujo real previsto:
  *   1. `crearPreferencia()`  -> POST al backend, que crea la preferencia en
- *      Mercado Pago (con external_reference y notification_url) y devuelve `init_point`.
+ *      Mercado Pago (con el folio como external_reference, el área y la clave
+ *      presupuestal como metadata, y notification_url) y devuelve `init_point`.
  *   2. El front abre `init_point` en una pestaña nueva.
  *   3. `esperarResultado()`  -> consulta (polling) al backend el estado del pago,
  *      que el backend confirma con el webhook de Mercado Pago. Nunca se debe
@@ -34,14 +45,17 @@ const TIEMPO_MAXIMO_ESPERA = 10 * 60 * 1000;
  */
 @Injectable({ providedIn: 'root' })
 export class MercadoPagoService {
-  async crearPreferencia(monto: number): Promise<PreferenciaPago> {
-    // TODO: POST /api/pagos/preferencias { monto } -> { preferenceId, initPoint }
+  async crearPreferencia(datos: DatosPreferencia): Promise<PreferenciaPago> {
+    // TODO: POST /api/pagos/preferencias { ...datos } -> { preferenceId, initPoint }
     await new Promise((resolve) => setTimeout(resolve, 1600));
 
     const preferenceId = crypto.randomUUID();
-    const url = new URL('/mercadopago-simulado', window.location.origin);
+    const url = new URL('mercadopago-simulado', document.baseURI);
     url.searchParams.set('pref', preferenceId);
-    url.searchParams.set('monto', String(monto));
+    url.searchParams.set('monto', String(datos.monto));
+    url.searchParams.set('titulo', datos.titulo);
+    url.searchParams.set('area', datos.area);
+    if (datos.referencia) url.searchParams.set('referencia', datos.referencia);
     return { preferenceId, initPoint: url.toString() };
   }
 

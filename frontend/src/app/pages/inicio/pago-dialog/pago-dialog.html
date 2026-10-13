@@ -1,0 +1,362 @@
+<div class="fondo" (click)="intentarCerrar()">
+  <div
+    class="dialogo"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pago-titulo"
+    [class.dialogo--exito]="fase() === 'exito'"
+    [class.dialogo--error]="fase() === 'error'"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="dialogo-header">
+      <h2 id="pago-titulo">
+        @switch (fase()) {
+          @case ('confirmar') { <i class="bi" [class]="'bi-' + info().icono"></i> {{ info().accion }} }
+          @case ('exito') { <i class="bi bi-check-circle"></i> Pago completado }
+          @case ('error') { <i class="bi bi-x-circle"></i> No se completó el pago }
+          @default { <i class="bi bi-credit-card"></i> Pago con Mercado Pago }
+        }
+      </h2>
+      @if (cerrable()) {
+        <button type="button" class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      }
+    </header>
+
+    @switch (fase()) {
+      <!-- 1. Capturar y confirmar -->
+      @case ('confirmar') {
+        <form class="dialogo-cuerpo" (submit)="$event.preventDefault(); pagar()" novalidate>
+          <p class="descripcion">{{ info().descripcion }}</p>
+
+          @switch (tipo()) {
+            <!-- Abono a monedero -->
+            @case ('monedero') {
+              <span class="etiqueta">¿A qué cuenta?</span>
+              <div class="segmentado" role="group" aria-label="Cuenta que recibe el abono">
+                <button
+                  #primero
+                  type="button"
+                  [class.activo]="destino() === 'propia'"
+                  [attr.aria-pressed]="destino() === 'propia'"
+                  (click)="destino.set('propia')"
+                >
+                  <i class="bi bi-person-check"></i> Mi monedero
+                </button>
+                <button
+                  type="button"
+                  [class.activo]="destino() === 'otra'"
+                  [attr.aria-pressed]="destino() === 'otra'"
+                  (click)="destino.set('otra')"
+                >
+                  <i class="bi bi-people"></i> Otra cuenta
+                </button>
+              </div>
+
+              @if (destino() === 'otra') {
+                <label class="etiqueta" for="campo-cuenta">Número económico o matrícula de la cuenta</label>
+                <input
+                  id="campo-cuenta"
+                  class="control"
+                  type="text"
+                  maxlength="20"
+                  placeholder="Ej. 67890"
+                  [value]="cuenta()"
+                  [class.invalido]="!!err('cuenta')"
+                  (input)="alTexto('cuenta', $event)"
+                />
+                <span class="error-campo" role="alert">{{ err('cuenta') }}</span>
+              }
+
+              <span class="etiqueta">Monto sugerido</span>
+              <div class="sugeridos">
+                @for (s of sugeridos; track s) {
+                  <button type="button" class="chip" [class.activo]="montoLibre() === s" (click)="montoLibre.set(s)">
+                    {{ s | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Curso o trámite: elegir de un catálogo -->
+            @case ('curso') {
+              <label class="etiqueta" for="campo-opcion">Curso</label>
+              <select #primero id="campo-opcion" class="control" [class.invalido]="!!err('opcion')" (change)="alElegir('opcionId', $event)">
+                <option value="" [selected]="!opcionId()">Selecciona un curso…</option>
+                @for (o of opciones(); track o.id) {
+                  <option [value]="o.id" [selected]="o.id === opcionId()">
+                    {{ o.nombre }} — {{ o.monto | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}
+                  </option>
+                }
+              </select>
+              @if (opcion(); as o) { <span class="detalle-opcion">{{ o.detalle }}</span> }
+              <span class="error-campo" role="alert">{{ err('opcion') }}</span>
+            }
+            @case ('tramite') {
+              <label class="etiqueta" for="campo-opcion">Trámite</label>
+              <select #primero id="campo-opcion" class="control" [class.invalido]="!!err('opcion')" (change)="alElegir('opcionId', $event)">
+                <option value="" [selected]="!opcionId()">Selecciona un trámite…</option>
+                @for (o of opciones(); track o.id) {
+                  <option [value]="o.id" [selected]="o.id === opcionId()">
+                    {{ o.nombre }}@if (o.monto !== null) { — {{ o.monto | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }} }
+                  </option>
+                }
+              </select>
+              @if (opcion(); as o) { <span class="detalle-opcion">{{ o.detalle }}</span> }
+              <span class="error-campo" role="alert">{{ err('opcion') }}</span>
+            }
+
+            <!-- Otro pago: instancia + concepto libre -->
+            @case ('otro') {
+              <label class="etiqueta" for="campo-area">Instancia que recibe el pago</label>
+              <select #primero id="campo-area" class="control" [class.invalido]="!!err('area')" (change)="alElegir('areaId', $event)">
+                <option value="" [selected]="!areaId()">Selecciona una instancia…</option>
+                @for (a of catalogo.areasDestino; track a.id) {
+                  <option [value]="a.id" [selected]="a.id === areaId()">{{ a.nombre }}</option>
+                }
+              </select>
+              <span class="error-campo" role="alert">{{ err('area') }}</span>
+
+              <label class="etiqueta" for="campo-concepto">Concepto del pago</label>
+              <input
+                id="campo-concepto"
+                class="control"
+                type="text"
+                maxlength="80"
+                placeholder="Ej. Pago de constancia"
+                [value]="concepto()"
+                [class.invalido]="!!err('concepto')"
+                (input)="alTexto('concepto', $event)"
+              />
+              <span class="error-campo" role="alert">{{ err('concepto') }}</span>
+            }
+          }
+
+          <!-- Monto libre (abono, otro pago y trámite sin tarifa fija) -->
+          @if (usaMontoLibre()) {
+            <label class="etiqueta" for="campo-monto">{{ tipo() === 'monedero' ? 'Otro monto' : 'Monto a pagar' }}</label>
+            <div class="entrada-monto">
+              <span class="prefijo">$</span>
+              <input
+                id="campo-monto"
+                type="number"
+                inputmode="decimal"
+                [attr.min]="info().montoMin"
+                [attr.max]="info().montoMax"
+                step="0.01"
+                placeholder="0.00"
+                [value]="montoLibre() ?? ''"
+                [class.invalido]="!!err('monto')"
+                (input)="alMonto($event)"
+              />
+            </div>
+            <span class="error-campo" role="alert">{{ err('monto') }}</span>
+          }
+
+          <!-- Referencia -->
+          @if (info().referencia; as ref) {
+            <label class="etiqueta" for="campo-referencia">{{ ref.etiqueta }}</label>
+            <input
+              id="campo-referencia"
+              class="control"
+              type="text"
+              maxlength="40"
+              [placeholder]="ref.placeholder"
+              [value]="referencia()"
+              [class.invalido]="!!err('referencia')"
+              (input)="alTexto('referencia', $event)"
+            />
+            <span class="error-campo" role="alert">{{ err('referencia') }}</span>
+          }
+
+          <!-- Resumen: qué se paga y a qué área se aplica -->
+          <dl class="resumen">
+            <div>
+              <dt>Concepto</dt>
+              <dd>{{ conceptoFinal() || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Se aplica a</dt>
+              <dd>
+                @if (area(); as a) {
+                  {{ a.nombre }}<small>Clave presupuestal {{ a.clave }}</small>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div class="resumen-total">
+              <dt>Total a pagar</dt>
+              <dd>
+                @if (monto() !== null && !errores()['monto']) {
+                  {{ monto() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            @if (tipo() === 'monedero' && destino() === 'propia') {
+              <div>
+                <dt>Saldo actual</dt>
+                <dd>{{ saldoActual() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</dd>
+              </div>
+              <div class="resumen-nuevo">
+                <dt>Saldo después del abono</dt>
+                <dd>
+                  @if (saldoNuevo() !== null) {
+                    {{ saldoNuevo() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}
+                  } @else {
+                    —
+                  }
+                </dd>
+              </div>
+            }
+          </dl>
+
+          <p class="nota">
+            <i class="bi bi-shield-lock"></i>
+            Te llevaremos a Mercado Pago, en una pestaña nueva, para completar el pago de forma segura.
+          </p>
+
+          <div class="acciones">
+            <button type="button" class="btn-secundario" (click)="cerrar.emit()">Cancelar</button>
+            <button type="submit" class="btn-primario">
+              <i class="bi bi-credit-card"></i> Pagar con Mercado Pago
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- 2. Redirigiendo -->
+      @case ('redirigiendo') {
+        <div class="dialogo-cuerpo estado" role="status" aria-live="polite">
+          <span class="spinner-grande" aria-hidden="true"></span>
+          <h3>Redirigiendo a Mercado Pago…</h3>
+          @if (pendiente(); as p) {
+            <p>Estamos preparando tu pago de {{ p.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}.</p>
+          }
+          <p class="sutil">Se abrirá una pestaña nueva. No cierres esta ventana.</p>
+        </div>
+      }
+
+      <!-- 3. Completar en la pestaña de Mercado Pago -->
+      @case ('esperando') {
+        <div class="dialogo-cuerpo estado" role="status" aria-live="polite">
+          <span class="icono-estado icono-estado--espera" aria-hidden="true">
+            <i class="bi bi-window-stack"></i>
+          </span>
+          <h3>Completa el pago en la pestaña de Mercado Pago</h3>
+          @if (pendiente(); as p) {
+            <p>
+              Estamos esperando la confirmación de tu pago de
+              <strong>{{ p.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</strong>
+              por «{{ p.concepto }}».
+            </p>
+          }
+
+          <ol class="pasos">
+            <li class="paso paso--hecho"><i class="bi bi-check-circle-fill"></i> Pago preparado</li>
+            <li class="paso paso--actual"><span class="spinner-chico" aria-hidden="true"></span> Realizando el pago en Mercado Pago</li>
+            <li class="paso"><i class="bi bi-circle"></i> Confirmación y comprobante</li>
+          </ol>
+
+          <p class="sutil">No cierres esta ventana ni la pestaña de Mercado Pago hasta terminar.</p>
+
+          <div class="acciones acciones--columna">
+            <button type="button" class="btn-primario" (click)="enfocarPestana()">
+              <i class="bi bi-box-arrow-up-right"></i> Ir a la pestaña de Mercado Pago
+            </button>
+            <button type="button" class="btn-secundario" (click)="cancelarPago()">Cancelar pago</button>
+          </div>
+        </div>
+      }
+
+      <!-- 4a. Éxito: comprobante -->
+      @case ('exito') {
+        <div class="dialogo-cuerpo estado" role="status" aria-live="polite">
+          <span class="icono-estado icono-estado--exito" aria-hidden="true">
+            <i class="bi bi-check-lg"></i>
+          </span>
+          <h3>¡Pago realizado con éxito!</h3>
+          <p>
+            @if (aMiMonedero()) {
+              Tu pago fue aprobado y el saldo ya está en tu monedero.
+            } @else if (comprobante()?.cuenta) {
+              Tu pago fue aprobado. El abono se acreditará a la cuenta {{ comprobante()!.cuenta }}.
+            } @else {
+              Tu pago fue aprobado y quedó registrado en tus pagos.
+            }
+          </p>
+
+          @if (comprobante(); as c) {
+            <dl class="resumen comprobante">
+              <div>
+                <dt>Concepto</dt>
+                <dd>{{ c.concepto }}</dd>
+              </div>
+              <div>
+                <dt>Se aplicó a</dt>
+                <dd>{{ c.areaNombre }}<small>Clave presupuestal {{ c.areaClave }}</small></dd>
+              </div>
+              @if (c.referencia) {
+                <div>
+                  <dt>Referencia</dt>
+                  <dd>{{ c.referencia }}</dd>
+                </div>
+              }
+              <div class="resumen-total">
+                <dt>Monto pagado</dt>
+                <dd>{{ c.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</dd>
+              </div>
+              @if (aMiMonedero()) {
+                <div class="resumen-nuevo">
+                  <dt>Nuevo saldo</dt>
+                  <dd>{{ saldoFinal() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</dd>
+                </div>
+              }
+              <div>
+                <dt>Folio</dt>
+                <dd class="folio">{{ c.folio }}</dd>
+              </div>
+              @if (c.mpPagoId) {
+                <div>
+                  <dt>Folio Mercado Pago</dt>
+                  <dd class="folio">{{ c.mpPagoId }}</dd>
+                </div>
+              }
+              <div>
+                <dt>Fecha</dt>
+                <dd>{{ fechaComprobante() }}</dd>
+              </div>
+            </dl>
+          }
+
+          <div class="acciones">
+            <button type="button" class="btn-primario" (click)="cerrar.emit()">
+              <i class="bi bi-house"></i> Volver al inicio
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 4b. Error -->
+      @case ('error') {
+        <div class="dialogo-cuerpo estado" role="alert">
+          <span class="icono-estado icono-estado--error" aria-hidden="true">
+            <i class="bi bi-x-lg"></i>
+          </span>
+          <h3>{{ falla().titulo }}</h3>
+          <p>{{ falla().mensaje }}</p>
+
+          <div class="acciones">
+            <button type="button" class="btn-secundario" (click)="cerrar.emit()">Cerrar</button>
+            <button type="button" class="btn-primario" (click)="reintentar()">
+              <i class="bi bi-arrow-repeat"></i> Intentar de nuevo
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

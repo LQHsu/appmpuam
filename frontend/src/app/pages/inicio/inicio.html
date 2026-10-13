@@ -34,6 +34,22 @@
       </div>
     </section>
 
+    <section class="pagar" aria-labelledby="pagar-titulo">
+      <h2 id="pagar-titulo" class="seccion-titulo"><i class="bi bi-credit-card-2-front"></i> ¿Qué quieres pagar?</h2>
+      <div class="pagar-grid">
+        @for (t of catalogo.tipos; track t.tipo) {
+          <button type="button" class="tipo-card" (click)="abrir(t.tipo)">
+            <span class="tipo-icono" aria-hidden="true"><i class="bi" [class]="'bi-' + t.icono"></i></span>
+            <span class="tipo-textos">
+              <span class="tipo-titulo">{{ t.titulo }}</span>
+              <span class="tipo-desc">{{ t.descripcion }}</span>
+            </span>
+            <i class="bi bi-chevron-right tipo-flecha" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    </section>
+
     <div class="columnas">
       <section class="saldo" aria-label="Monedero electrónico">
         <span class="saldo-etiqueta"><i class="bi bi-wallet2"></i> Tu saldo</span>
@@ -51,38 +67,98 @@
           </div>
         </div>
 
-        <button type="button" class="btn-abono" (click)="abrirAbono()">
+        <button type="button" class="btn-abono" (click)="abrir('monedero')">
           <i class="bi bi-plus-circle"></i>
           Realizar abono a monedero
         </button>
       </section>
 
-      <section class="movimientos" aria-label="Últimos movimientos">
-        <h2 class="movimientos-titulo"><i class="bi bi-receipt"></i> Últimos movimientos</h2>
-        <ul class="lista">
-          @for (m of movimientos(); track m.id) {
-            <li class="movimiento">
-              <span class="mov-icono" [class.abono]="m.tipo === 'abono'">
-                <i class="bi" [class.bi-arrow-down-left]="m.tipo === 'abono'" [class.bi-arrow-up-right]="m.tipo === 'consumo'"></i>
-              </span>
-              <span class="mov-datos">
-                <span class="mov-concepto">{{ m.concepto }}</span>
-                <span class="mov-fecha">{{ m.fechaTexto }}</span>
-              </span>
-              <span class="mov-monto" [class.abono]="m.tipo === 'abono'">
-                {{ m.tipo === 'abono' ? '+' : '−' }}{{ m.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}
-              </span>
-            </li>
-          }
-        </ul>
+      <section class="movimientos" aria-label="Actividad">
+        <div class="tabs" role="tablist" aria-label="Actividad">
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            [class.activa]="pestana() === 'movimientos'"
+            [attr.aria-selected]="pestana() === 'movimientos'"
+            (click)="pestana.set('movimientos')"
+          >
+            <i class="bi bi-receipt"></i> Movimientos del monedero
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            [class.activa]="pestana() === 'pagos'"
+            [attr.aria-selected]="pestana() === 'pagos'"
+            (click)="pestana.set('pagos')"
+          >
+            <i class="bi bi-journal-check"></i> Mis pagos
+          </button>
+        </div>
+
+        @if (pestana() === 'movimientos') {
+          <ul class="lista" role="tabpanel">
+            @for (m of movimientos(); track m.id) {
+              <li class="movimiento">
+                <span class="mov-icono" [class.abono]="m.tipo === 'abono'">
+                  <i class="bi" [class.bi-arrow-down-left]="m.tipo === 'abono'" [class.bi-arrow-up-right]="m.tipo === 'consumo'"></i>
+                </span>
+                <span class="mov-datos">
+                  <span class="mov-concepto">{{ m.concepto }}</span>
+                  <span class="mov-fecha">{{ m.fechaTexto }}</span>
+                </span>
+                <span class="mov-monto" [class.abono]="m.tipo === 'abono'">
+                  {{ m.tipo === 'abono' ? '+' : '−' }}{{ m.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div role="tabpanel">
+            <ul class="lista">
+              @for (p of pagosVista(); track p.id) {
+                <li class="movimiento">
+                  <span class="mov-icono pago-icono">
+                    <i class="bi" [class]="'bi-' + p.icono"></i>
+                  </span>
+                  <span class="mov-datos">
+                    <span class="mov-concepto">{{ p.concepto }}</span>
+                    <span class="badge-area">{{ p.areaNombre }} · {{ p.areaClave }}</span>
+                    <span class="mov-fecha">{{ p.folio }} · {{ p.fechaTexto }}</span>
+                  </span>
+                  <span class="mov-monto pago-monto">{{ p.monto | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+                </li>
+              }
+            </ul>
+
+            <h3 class="subtitulo"><i class="bi bi-diagram-3"></i> Resumen por coordinación o área</h3>
+            <ul class="areas">
+              @for (a of pagos.resumenPorArea(); track a.areaId) {
+                <li class="area-fila">
+                  <span class="area-nombre">
+                    {{ a.nombre }}
+                    <small>{{ a.clave }} · {{ a.cantidad }} {{ a.cantidad === 1 ? 'pago' : 'pagos' }}</small>
+                  </span>
+                  <span class="area-total">{{ a.total | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+                </li>
+              }
+              <li class="area-fila area-fila--total">
+                <span class="area-nombre">Total pagado</span>
+                <span class="area-total">{{ pagos.totalPagado() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' }}</span>
+              </li>
+            </ul>
+          </div>
+        }
       </section>
     </div>
   </div>
 
-  @if (dialogoAbierto()) {
-    <app-abono-dialog
+  @if (tipoAbierto(); as tipo) {
+    <app-pago-dialog
+      [tipo]="tipo"
       [saldoActual]="wallet.saldo()"
-      (cerrar)="cerrarAbono()"
+      (cerrar)="cerrarPago()"
     />
   }
 }
